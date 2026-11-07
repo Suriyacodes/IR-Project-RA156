@@ -1,0 +1,4 @@
+logistic_regression_C,validation_accuracy_percent,validation_f1_percent,training_time_seconds
+10.0,92.73,92.78,0.727
+1.0,92.56,92.61,0.731
+0.1,91.09,91.2,0.67

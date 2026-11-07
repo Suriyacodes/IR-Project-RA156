@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Detailed results and reproducibility commands for the Technology IR binary text-classification project.">
+  <title>Experiment Results | Technology Text Classification</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17263c;
+      --muted: #596b80;
+      --paper: #ffffff;
+      --canvas: #f2f6fb;
+      --line: #dce5ef;
+      --blue: #175cd3;
+      --blue-dark: #143b75;
+      --green: #157347;
+      --code: #102033;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--canvas);
+      color: var(--ink);
+      font: 16px/1.65 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    header {
+      padding: 3.5rem max(1.25rem, calc((100% - 1100px) / 2));
+      background: linear-gradient(125deg, #102d54, #1765b5);
+      color: #fff;
+    }
+
+    header p { max-width: 760px; color: #d8e8ff; }
+    h1 { max-width: 850px; margin: 0; font-size: clamp(2rem, 5vw, 3.5rem); line-height: 1.12; }
+    h2 { margin-top: 0; font-size: 1.55rem; }
+    h3 { margin-bottom: .35rem; }
+    a { color: var(--blue); }
+    header a { color: #fff; }
+
+    main {
+      width: min(1100px, calc(100% - 2rem));
+      margin: 2rem auto 4rem;
+    }
+
+    section, .summary-card {
+      margin: 1.25rem 0;
+      padding: clamp(1.1rem, 3vw, 2rem);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--paper);
+      box-shadow: 0 8px 26px rgb(23 38 60 / 5%);
+    }
+
+    .summary-grid, .chart-grid, .matrix-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+      gap: 1rem;
+    }
+
+    .summary-card { margin: 0; }
+    .summary-card strong { display: block; color: var(--blue-dark); font-size: 1.6rem; }
+    .summary-card span, .muted { color: var(--muted); }
+    .winner { border-top: 4px solid var(--green); }
+
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+    caption { padding: .5rem 0 1rem; text-align: left; color: var(--muted); }
+    th, td { padding: .75rem .65rem; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+    th { color: var(--blue-dark); font-size: .88rem; }
+    th:first-child, td:first-child { text-align: left; }
+    tbody tr:first-child { background: #edf7f1; font-weight: 650; }
+
+    .model-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 350px), 1fr)); gap: 1rem; }
+    .model-card { padding: 1.1rem; border: 1px solid var(--line); border-radius: 12px; }
+    .model-card p { margin: .35rem 0; }
+    .badge { display: inline-block; padding: .1rem .55rem; border-radius: 99px; background: #e8f1ff; color: var(--blue-dark); font-size: .82rem; }
+
+    figure { margin: 0; padding: .8rem; border: 1px solid var(--line); border-radius: 12px; }
+    figure img { display: block; width: 100%; height: auto; }
+    figcaption { margin-top: .6rem; color: var(--muted); font-size: .9rem; }
+
+    pre {
+      overflow-x: auto;
+      padding: 1rem;
+      border-radius: 10px;
+      background: var(--code);
+      color: #e7f0ff;
+      font: .9rem/1.65 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .note { padding: .9rem 1rem; border-left: 4px solid var(--blue); background: #f0f6ff; }
+    footer { padding: 1rem 0; color: var(--muted); font-size: .9rem; }
+
+    @media print {
+      body { background: #fff; }
+      header { padding: 1.5rem; }
+      main { width: 100%; margin: 1rem auto; }
+      section, .summary-card { break-inside: avoid; box-shadow: none; }
+      pre { white-space: pre-wrap; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <p>Technology IR Final Project · Experiment report</p>
+    <h1>Binary Text Classification: Results and Reproduction Commands</h1>
+    <p>
+      A detailed account of the measured test-set comparison between four TF-IDF
+      classifiers, plus the Logistic Regression regularization experiment.
+      The figures below are copied from this project's result CSV files.
+    </p>
+    <p><a href="../README.md">Project README</a> · <a href="../main.py">Experiment source code</a></p>
+  </header>
+
+  <main>
+    <div class="summary-grid" aria-label="Key results">
+      <article class="summary-card winner">
+        <span>Top test-set F1</span>
+        <strong>SVM · 91.48%</strong>
+        <span>Also highest accuracy: 91.52%</span>
+      </article>
+      <article class="summary-card">
+        <span>Highest test-set recall</span>
+        <strong>Naive Bayes · 93.91%</strong>
+        <span>Positive class: Technology</span>
+      </article>
+      <article class="summary-card">
+        <span>Selected Logistic Regression C</span>
+        <strong>10.0</strong>
+        <span>Validation F1: 92.78%</span>
+      </article>
+    </div>
+
+    <section>
+      <h2>1. Experiment overview</h2>
+      <p>
+        This project turns selected 20 Newsgroups topics into a binary text
+        classification task. Technology is the positive class (label 1);
+        Non-Technology is the negative class (label 0). All four classifiers
+        use the same official train/test subsets and a TF-IDF pipeline.
+      </p>
+      <ul>
+        <li><strong>Text preparation:</strong> remove headers, footers, and quoted text; lowercase; remove English stop words.</li>
+        <li><strong>Features:</strong> TF-IDF unigrams and bigrams, up to 30,000 features, with sublinear term frequency.</li>
+        <li><strong>Evaluation:</strong> held-out test accuracy, positive-class precision, recall, F1, training time, and prediction time.</li>
+        <li><strong>Timing note:</strong> timings are the recorded values for this run and can vary with hardware and software environment.</li>
+      </ul>
+      <p><strong>Technology categories:</strong> <code>comp.graphics</code>, <code>comp.os.ms-windows.misc</code>, <code>comp.sys.ibm.pc.hardware</code>, <code>comp.sys.mac.hardware</code>, <code>comp.windows.x</code>.</p>
+      <p><strong>Non-Technology categories:</strong> <code>rec.sport.baseball</code>, <code>rec.sport.hockey</code>, <code>sci.space</code>, <code>talk.politics.misc</code>, <code>misc.forsale</code>.</p>
+    </section>
+
+    <section>
+      <h2>2. Test-set algorithm comparison</h2>
+      <p>
+        Models are ranked by positive-class F1, with accuracy as a secondary
+        sort key. Precision, recall, and F1 refer to the Technology class.
+      </p>
+      <div class="table-wrap">
+        <table>
+          <caption>Measured values from <a href="algorithm_comparison.csv">algorithm_comparison.csv</a></caption>
+          <thead>
+            <tr>
+              <th scope="col">Rank</th>
+              <th scope="col">Algorithm</th>
+              <th scope="col">Accuracy</th>
+              <th scope="col">Precision</th>
+              <th scope="col">Recall</th>
+              <th scope="col">F1-score</th>
+              <th scope="col">Training (s)</th>
+              <th scope="col">Prediction (s)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td>SVM</td><td>91.52%</td><td>93.53%</td><td>89.51%</td><td>91.48%</td><td>0.901</td><td>0.213</td></tr>
+            <tr><td>2</td><td>Multinomial Naive Bayes</td><td>90.64%</td><td>88.40%</td><td>93.91%</td><td>91.07%</td><td>0.860</td><td>0.214</td></tr>
+            <tr><td>3</td><td>Logistic Regression</td><td>91.11%</td><td>93.34%</td><td>88.85%</td><td>91.04%</td><td>0.908</td><td>0.220</td></tr>
+            <tr><td>4</td><td>KNN</td><td>89.49%</td><td>90.16%</td><td>89.05%</td><td>89.60%</td><td>0.849</td><td>0.572</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="model-grid" style="margin-top: 1rem">
+        <article class="model-card">
+          <h3>SVM <span class="badge">Best F1 and accuracy</span></h3>
+          <p>Accuracy 91.52% · Precision 93.53% · Recall 89.51% · F1 91.48%.</p>
+          <p>Highest overall F1 in this run, with the highest precision and accuracy. The slightly lower recall means it misses more Technology items than the Naive Bayes model.</p>
+        </article>
+        <article class="model-card">
+          <h3>Multinomial Naive Bayes</h3>
+          <p>Accuracy 90.64% · Precision 88.40% · Recall 93.91% · F1 91.07%.</p>
+          <p>Highest recall of the four: it identifies the largest share of Technology documents, while its lower precision indicates more false Technology predictions.</p>
+        </article>
+        <article class="model-card">
+          <h3>Logistic Regression</h3>
+          <p>Accuracy 91.11% · Precision 93.34% · Recall 88.85% · F1 91.04%.</p>
+          <p>Its precision is close to SVM, but lower recall leads to an F1 score 0.44 percentage points below SVM in this test run.</p>
+        </article>
+        <article class="model-card">
+          <h3>K-Nearest Neighbors</h3>
+          <p>Accuracy 89.49% · Precision 90.16% · Recall 89.05% · F1 89.60%.</p>
+          <p>Lowest F1 and accuracy in this comparison. Its measured prediction time, 0.572 seconds, is also longer than the other three model runs.</p>
+        </article>
+      </div>
+      <p class="note">
+        Based on test-set F1, SVM is the recommended model for this measured
+        comparison. If maximizing Technology recall is more important than
+        precision, Multinomial Naive Bayes is the alternative to consider.
+      </p>
+    </section>
+
+    <section>
+      <h2>3. Logistic Regression what-if experiment</h2>
+      <p>
+        The <code>C</code> parameter controls inverse regularization strength:
+        smaller values regularize more strongly. C was selected using a
+        stratified 20% validation split from the training set; the official
+        test set was not used to select it.
+      </p>
+      <div class="table-wrap">
+        <table>
+          <caption>Measured validation values from <a href="../what_if_experiment/logistic_regression_C_comparison.csv">logistic_regression_C_comparison.csv</a></caption>
+          <thead>
+            <tr>
+              <th scope="col">C</th>
+              <th scope="col">Validation accuracy</th>
+              <th scope="col">Validation F1</th>
+              <th scope="col">Training time (s)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>10.0</td><td>92.73%</td><td>92.78%</td><td>0.727</td></tr>
+            <tr><td>1.0</td><td>92.56%</td><td>92.61%</td><td>0.731</td></tr>
+            <tr><td>0.1</td><td>91.09%</td><td>91.20%</td><td>0.670</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        <strong>Selection:</strong> C = 10.0 ranked first by validation F1
+        (92.78%), then validation accuracy (92.73%). This selected value was
+        used to fit the final Logistic Regression model on all training data.
+      </p>
+      <figure>
+        <img src="../what_if_experiment/C_parameter_accuracy.png" alt="Line chart of Logistic Regression C values versus validation accuracy">
+        <figcaption>Validation accuracy by C; the numerical source is the what-if CSV above.</figcaption>
+      </figure>
+    </section>
+
+    <section>
+      <h2>4. Result charts and confusion matrices</h2>
+      <p class="muted">Open any image in a new tab to inspect it at full size. Confusion matrix axes show Non-Technology and Technology.</p>
+      <div class="chart-grid">
+        <figure><a href="accuracy_comparison.png"><img src="accuracy_comparison.png" alt="Accuracy comparison bar chart"></a><figcaption>Accuracy (%) by classifier</figcaption></figure>
+        <figure><a href="precision_comparison.png"><img src="precision_comparison.png" alt="Precision comparison bar chart"></a><figcaption>Positive-class precision (%) by classifier</figcaption></figure>
+        <figure><a href="recall_comparison.png"><img src="recall_comparison.png" alt="Recall comparison bar chart"></a><figcaption>Positive-class recall (%) by classifier</figcaption></figure>
+        <figure><a href="f1_score_comparison.png"><img src="f1_score_comparison.png" alt="F1-score comparison bar chart"></a><figcaption>Positive-class F1 (%) by classifier</figcaption></figure>
+      </div>
+      <div class="matrix-grid" style="margin-top: 1rem">
+        <figure><a href="confusion_matrix_svm.png"><img src="confusion_matrix_svm.png" alt="SVM confusion matrix"></a><figcaption>SVM confusion matrix</figcaption></figure>
+        <figure><a href="confusion_matrix_multinomial_naive_bayes.png"><img src="confusion_matrix_multinomial_naive_bayes.png" alt="Multinomial Naive Bayes confusion matrix"></a><figcaption>Multinomial Naive Bayes confusion matrix</figcaption></figure>
+        <figure><a href="confusion_matrix_logistic_regression.png"><img src="confusion_matrix_logistic_regression.png" alt="Logistic Regression confusion matrix"></a><figcaption>Logistic Regression confusion matrix</figcaption></figure>
+        <figure><a href="confusion_matrix_knn.png"><img src="confusion_matrix_knn.png" alt="KNN confusion matrix"></a><figcaption>KNN confusion matrix</figcaption></figure>
+      </div>
+    </section>
+
+    <section>
+      <h2>5. Commands to reproduce the experiment</h2>
+      <h3>macOS / Linux: create environment, install dependencies, and run</h3>
+      <pre><code>cd "/path/to/Technology_IR_Final_Project"
+python3 --version
+python3 -m venv venv
+source venv/bin/activate
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+python main.py</code></pre>
+      <p>For an existing environment, activate it and run:</p>
+      <pre><code>cd "/path/to/Technology_IR_Final_Project"
+source venv/bin/activate
+python main.py</code></pre>
+
+      <h3>Windows PowerShell / Command Prompt</h3>
+      <pre><code>cd "path\to\Technology_IR_Final_Project"
+py -m venv venv
+venv\Scripts\activate
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+python main.py</code></pre>
+
+      <h3>Open this report and inspect the saved CSVs (macOS)</h3>
+      <pre><code>open results/index.html
+column -s, -t &lt; results/algorithm_comparison.csv
+column -s, -t &lt; what_if_experiment/logistic_regression_C_comparison.csv</code></pre>
+      <p>
+        On the first run, scikit-learn downloads the 20 Newsgroups data, so
+        internet access is required. Running <code>python main.py</code>
+        regenerates the CSVs and charts from the current environment.
+      </p>
+    </section>
+
+    <section>
+      <h2>6. Files produced by the experiment</h2>
+      <ul>
+        <li><a href="algorithm_comparison.csv"><code>results/algorithm_comparison.csv</code></a> — ranked metrics and recorded timings for all four classifiers.</li>
+        <li><a href="accuracy_comparison.png"><code>results/accuracy_comparison.png</code></a>, <a href="precision_comparison.png"><code>results/precision_comparison.png</code></a>, <a href="recall_comparison.png"><code>results/recall_comparison.png</code></a>, and <a href="f1_score_comparison.png"><code>results/f1_score_comparison.png</code></a> — comparison charts.</li>
+        <li><code>results/confusion_matrix_*.png</code> — one confusion matrix for each classifier.</li>
+        <li><a href="../what_if_experiment/logistic_regression_C_comparison.csv"><code>what_if_experiment/logistic_regression_C_comparison.csv</code></a> — validation results for C = 0.1, 1.0, and 10.0.</li>
+        <li><a href="../what_if_experiment/C_parameter_accuracy.png"><code>what_if_experiment/C_parameter_accuracy.png</code></a> — validation accuracy chart for the C experiment.</li>
+      </ul>
+    </section>
+
+    <footer>
+      Values in this report reflect the result files currently in the project folder. Re-run the experiment to replace them with fresh measurements.
+    </footer>
+  </main>
+</body>
+</html>
